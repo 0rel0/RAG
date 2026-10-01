@@ -2,7 +2,7 @@
 Ingestion pipeline: PDF -> chunks -> embeddings -> FAISS index.
 Run this once offline to generate data/processed/index.faiss and chunks.json.
 """
-import json
+import json, re
 import unicodedata
 import pymupdf  # orignally as import fitz but will be deprecated in future
 import faiss # faiss-cpu
@@ -36,7 +36,11 @@ def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
     start = 0
     while start < len(text):
         end = start + chunk_size
-        chunks.append(text[start:end])
+        chunk_text_segment = text[start:end]
+        # Find the last page marker before this chunk's start
+        page_matches = re.findall(r"\[PAGE (\d+)\]", text[:start + 1])
+        page_number = int(page_matches[-1]) if page_matches else None
+        chunks.append({"text": chunk_text_segment, "page": page_number})
         start += chunk_size - overlap
     return chunks
 
@@ -45,13 +49,13 @@ def build_index():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     model = SentenceTransformer(EMBEDDING_MODEL)
 
-    all_chunks = []  # list of dicts: {text, source}
+    all_chunks = []  # list of dicts: {text, page, source}
     for pdf_path in PDF_DIR.glob("*.pdf"):
         print(f"Processing {pdf_path.name}...")
         text = extract_text_from_pdf(pdf_path)
         chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
         for chunk in chunks:
-            all_chunks.append({"text": chunk, "source": pdf_path.name})
+            all_chunks.append({**chunk, "source": pdf_path.name})
 
     print(f"Total chunks: {len(all_chunks)}")
 
