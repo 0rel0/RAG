@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+*.code-workspace
+comments.txt
+
+# data
+data/*
