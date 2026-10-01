@@ -46,16 +46,21 @@ def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
 
 
 def build_index():
+    """extracts the txt from pdf
+    cuts it into chunks
+    embeds the chunks using sentence-transformers
+    builds index using faiss and writes it in index.faiss
+    writes chunks in JSON"""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     model = SentenceTransformer(EMBEDDING_MODEL)
 
     all_chunks = []  # list of dicts: {text, page, source}
-    for pdf_path in PDF_DIR.glob("*.pdf"):
+    for pdf_path in PDF_DIR.glob("*.pdf"): # unecessary if there is only one source but this would scale up for more than one
         print(f"Processing {pdf_path.name}...")
         text = extract_text_from_pdf(pdf_path)
-        chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
+        chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP) # all_chunks = chunks for now (1 source)
         for chunk in chunks:
-            all_chunks.append({**chunk, "source": pdf_path.name})
+            all_chunks.append({**chunk, "source": pdf_path.name}) # Merge the chunk dict with the source, instead of nesting it
 
     print(f"Total chunks: {len(all_chunks)}")
 
