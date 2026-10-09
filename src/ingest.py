@@ -13,35 +13,63 @@ from sentence_transformers import SentenceTransformer
 PDF_DIR = Path("PhDdoc")
 OUTPUT_DIR = Path("data/processed")
 CHUNK_SIZE = 800       # characters, adjust after testing
-CHUNK_OVERLAP = 150
+CHUNK_OVERLAP = 150    # characters
+CHUNK_OVERLAP_SENTENCES = 2
 EMBEDDING_MODEL = "all-MiniLM-L6-v2" # seems to be the standard
 
 
-def extract_text_from_pdf(pdf_path: Path) -> str:
-    """Extract raw text from a PDF file."""
+def extract_pages_from_pdf(pdf_path: Path) -> list[tuple[int, str]]:
+    """Extract raw text from a PDF file, per page.
+    Returns a list of (page_number, page_text) tuples, 1-indexed."""
     doc = pymupdf.open(pdf_path)
-    text = ""
+    pages = []
     for page_num, page in enumerate(doc):
-        text += f"\n[PAGE {page_num + 1}]\n" + page.get_text()
-    return normalize_text(text)
+        page_text = normalize_text(page.get_text())
+        pages.append((page_num + 1, page_text))
+    return pages
 
 
 def normalize_text(text: str) -> str:
     """Normalize Unicode ligatures (e.g. 'ﬃ' -> 'ffi') and other compatibility forms."""
     return unicodedata.normalize("NFKC", text)
 
-def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
-    """Naive fixed-size chunking with overlap. TODO: improve to respect sentence/page boundaries."""
+def chunk_text(pages: list[tuple[int, str]], max_chunk_size: int, overlap_sentences: int = 1) -> list[dict]:
+    """Sentence-aware chunking across pages, with cross-page overlap.
+    Groups sentences until max_chunk_size is reached, keeping chunks variable
+    in length but never splitting mid-sentence. Tracks the page of the first
+    sentence in each chunk."""
+
+    # Flatten all pages into a single list of (sentence, page_number) tuples
+    sentence_page_pairs = []
+    for page_num, page_text in pages:
+        sentences = re.split(r'(?<=[.!?])\s+', page_text.strip())
+        for s in sentences:
+            if s.strip():
+                sentence_page_pairs.append((s.strip(), page_num))
+
     chunks = []
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunk_text_segment = text[start:end]
-        # Find the last page marker before this chunk's start
-        page_matches = re.findall(r"\[PAGE (\d+)\]", text[:start + 1])
-        page_number = int(page_matches[-1]) if page_matches else None
-        chunks.append({"text": chunk_text_segment, "page": page_number})
-        start += chunk_size - overlap
+    current_list = []  # list of (sentence, page_num)
+    current_length = 0
+
+    def flush_chunk():
+        if not current_list:
+            return
+        chunk_str = " ".join(s for s, _ in current_list).strip()
+        if chunk_str:
+            first_page = current_list[0][1]
+            chunks.append({"text": chunk_str, "page": first_page})
+
+    for sentence, page_num in sentence_page_pairs:
+        sentence_len = len(sentence)
+        if current_length + sentence_len > max_chunk_size and current_list:
+            flush_chunk()
+            current_list = current_list[-overlap_sentences:] if overlap_sentences else []
+            current_length = sum(len(s) for s, _ in current_list)
+
+        current_list.append((sentence, page_num))
+        current_length += sentence_len
+
+    flush_chunk()
     return chunks
 
 
@@ -57,10 +85,11 @@ def build_index():
     all_chunks = []  # list of dicts: {text, page, source}
     for pdf_path in PDF_DIR.glob("*.pdf"): # unecessary if there is only one source but this would scale up for more than one
         print(f"Processing {pdf_path.name}...")
-        text = extract_text_from_pdf(pdf_path)
-        chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP) # all_chunks = chunks for now (1 source)
+        text = extract_pages_from_pdf(pdf_path)
+        chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP_SENTENCES) # all_chunks = chunks for now (1 source)
         for chunk in chunks:
-            all_chunks.append({**chunk, "source": pdf_path.name}) # Merge the chunk dict with the source, instead of nesting it
+            if chunk["text"].strip(): # extra check in case of emtpy chunks after splitting by sentence
+                all_chunks.append({**chunk, "source": pdf_path.name}) # Merge the chunk dict with the source, instead of nesting it
 
     print(f"Total chunks: {len(all_chunks)}")
 
