@@ -11,6 +11,8 @@ Ran extra checks to make sure there are no emtpy chunks.
 
 Maybe change embedding model later to support french?
 
+Changed chunking to split by sentence, more natural. overlap is 2 sentences. 
+
 
 
 ## retrieval.py
@@ -24,3 +26,16 @@ Distance 1.0–1.5: loosely related
 Distance > 1.5–2.0: likely irrelevant
 
 Works also with french
+
+
+## generation
+
+There are two options for LLM: local or remote.
+
+-  Local: No need for API key, no limit but uses local resource and can't really be exposed. 
+
+- remote: Create free account on Groq to get an API key. Can be used by a streamlit app. There are safeguards for limits. 
+
+I decided to get and API key for mistral.
+
+The key can be stored in a local file .env that should not be committed (add to .gitignore) and then can be retrieved with dotenv.load_dotenv() and then it's in os.environ{}. Other option is to add the file (somewhere else, not committed) to PATH and then get it. 
