@@ -4,7 +4,13 @@ Call Mistral API with retrieved context to generate a grounded answer.
 import os
 # from dotenv import load_dotenv # other option
 from pathlib import Path
-from mistralai import Mistral
+from mistralai.client import Mistral
+
+# MISTRAL_MODEL = "mistral-small-latest"  # adjust to preferred available model
+# MISTRAL_MODEL = "mistral-tiny"  # works but not listed?!
+MISTRAL_MODEL = "ministral-3b-latest"  # 
+
+
 
 # load_dotenv() # no-op in production if .env doesn't exist; hosting platforms inject env vars directly
 def get_api_key() -> str:
@@ -14,8 +20,6 @@ def get_api_key() -> str:
     if key_file := os.environ.get("MISTRAL_API_KEY_FILE"):
         return Path(key_file).read_text().strip()
     raise RuntimeError("No Mistral API key found: set MISTRAL_API_KEY or MISTRAL_API_KEY_FILE")
-
-MISTRAL_MODEL = "mistral-small-latest"  # adjust to preferred available model
 
 def build_prompt(query: str, context_chunks: list[dict]) -> str:
     context_text = "\n\n---\n\n".join(
