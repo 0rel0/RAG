@@ -15,13 +15,14 @@ MISTRAL_MODEL = "ministral-3b-latest"  #
 # load_dotenv() # no-op in production if .env doesn't exist; hosting platforms inject env vars directly
 def get_api_key() -> str:
     """Gets mistral API key either from environment variable or from a file specified in an environment variable."""
-    if key := os.environ.get("MISTRAL_API_KEY"):
+    if key := os.environ.get("MISTRAL_API_KEY"): #if key is directly there (Streamlit secrets, etc.)
         return key
-    if key_file := os.environ.get("MISTRAL_API_KEY_FILE"):
+    if key_file := os.environ.get("MISTRAL_API_KEY_FILE"): #locol file 
         return Path(key_file).read_text().strip()
     raise RuntimeError("No Mistral API key found: set MISTRAL_API_KEY or MISTRAL_API_KEY_FILE")
 
 def build_prompt(query: str, context_chunks: list[dict]) -> str:
+    """Builds a prompt using the user query and the retrieved context chunks."""
     context_text = "\n\n---\n\n".join(
         f"[Source: {c['source']}, page {c.get('page')}]\n{c['text']}" for c in context_chunks
     )
@@ -38,6 +39,8 @@ Answer:"""
 
 
 def generate_answer(query: str, context_chunks: list[dict]) -> str:
+    """Gets the user query and the retrieved context chunks, 
+    builds a prompt, and calls the Mistral API to generate an answer."""
     client = Mistral(api_key=get_api_key())
     prompt = build_prompt(query, context_chunks)
 

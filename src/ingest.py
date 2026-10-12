@@ -42,7 +42,7 @@ def chunk_text(pages: list[tuple[int, str]], max_chunk_size: int, overlap_senten
     # Flatten all pages into a single list of (sentence, page_number) tuples
     sentence_page_pairs = []
     for page_num, page_text in pages:
-        sentences = re.split(r'(?<=[.!?])\s+', page_text.strip())
+        sentences = re.split(r'(?<=[.!?])\s+', page_text.strip()) #split by sentence
         for s in sentences:
             if s.strip():
                 sentence_page_pairs.append((s.strip(), page_num))
@@ -52,6 +52,8 @@ def chunk_text(pages: list[tuple[int, str]], max_chunk_size: int, overlap_senten
     current_length = 0
 
     def flush_chunk():
+        """utility function to create the chunk made of joined sentences with overlap
+        flow processing, so extra checks for first time etc."""
         if not current_list:
             return
         chunk_str = " ".join(s for s, _ in current_list).strip()
@@ -69,7 +71,7 @@ def chunk_text(pages: list[tuple[int, str]], max_chunk_size: int, overlap_senten
         current_list.append((sentence, page_num))
         current_length += sentence_len
 
-    flush_chunk()
+    flush_chunk() #last go once out of the loop
     return chunks
 
 
