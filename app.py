@@ -15,7 +15,7 @@ def load_retriever():
 
 retriever = load_retriever()
 
-query = st.text_input("Ask a question:")
+query = st.text_input("Ask a question abouth the thesis:")
 
 if query:
     with st.spinner("Searching thesis and generating answer..."):

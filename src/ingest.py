@@ -13,10 +13,17 @@ from sentence_transformers import SentenceTransformer
 PDF_DIR = Path("PhDdoc")
 OUTPUT_DIR = Path("data/processed")
 CHUNK_SIZE = 800       # characters, adjust after testing
-CHUNK_OVERLAP = 150    # characters
 CHUNK_OVERLAP_SENTENCES = 2
 EMBEDDING_MODEL = "all-MiniLM-L6-v2" # seems to be the standard
 
+FLOATING_ACCENT_FIXES = {
+    "´e": "é", "´E": "É",
+    "`e": "è", "`E": "È",
+    "^e": "ê", "^E": "Ê", "ˆe": "ê",
+    " ̧c": "ç", " ̧C": "Ç",
+    "`a": "à", "ˆa": "â",
+    "ˆo": "ô",
+}
 
 def extract_pages_from_pdf(pdf_path: Path) -> list[tuple[int, str]]:
     """Extract raw text from a PDF file, per page.
@@ -30,7 +37,11 @@ def extract_pages_from_pdf(pdf_path: Path) -> list[tuple[int, str]]:
 
 
 def normalize_text(text: str) -> str:
-    """Normalize Unicode ligatures (e.g. 'ﬃ' -> 'ffi') and other compatibility forms."""
+    """ Fixes the "floating" french accent issues from the old PDF
+    Normalize Unicode ligatures (e.g. 'ﬃ' -> 'ffi') and other compatibility forms."""
+    for broken, fixed in FLOATING_ACCENT_FIXES.items():
+        new_text = text.replace(broken, fixed)
+        text=new_text
     return unicodedata.normalize("NFKC", text)
 
 def chunk_text(pages: list[tuple[int, str]], max_chunk_size: int, overlap_sentences: int = 1) -> list[dict]:

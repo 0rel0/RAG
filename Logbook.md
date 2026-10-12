@@ -9,7 +9,7 @@ The source file name field is not really useful but I modified it to have also t
 
 Ran extra checks to make sure there are no emtpy chunks. 
 
-Maybe change embedding model later to support french?
+Maybe change embedding model later to support french: done. Had to run several test to replace accents correctly with simple string manipulations.
 
 Changed chunking to split by sentence, more natural. overlap is 2 sentences. 
 
@@ -40,8 +40,10 @@ I decided to get and API key for mistral.
 
 The key can be stored in a local file .env that should not be committed (add to .gitignore) and then can be retrieved with dotenv.load_dotenv() and then it's in os.environ{}. Other option is to add the file (somewhere else, not committed) to PATH and then get it. 
 
+NOTE: low hanging fruit: add safeguards & limitations.
 
-# Models
+
+## Models
 
 Complete mess. Models mistral-small-latest and mistral-medium-latest give error 429: rate limit exceeded with 0 API requests sent. I ask mistral's AI, tested with curl and found by accident taht mistral-tiny works. I also queried for the list of models (in models.json) and it's not even in it! Claude Sonnet thinks it's an old alias for backward compatibility (but they have aliases...)
 
@@ -59,3 +61,10 @@ Failing models (3):
   - labs-leanstral-1-5-1: 403
   - mistral-medium-latest: 429
   - mistral-small-2603: 429
+
+
+## low hanging fruits
+ - split by sentence DONE
+ - latex expressions
+ - formatting french text to have accents DONE
+ - safeguards and limitations on model calls 
