@@ -1,4 +1,5 @@
 streamlit
+streamlit[pdf]
 pymupdf
 sentence-transformers
 faiss-cpu

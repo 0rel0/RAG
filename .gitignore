@@ -8,3 +8,6 @@ comments.txt
 
 # data
 data/*
+
+# own tests
+pdf_page*

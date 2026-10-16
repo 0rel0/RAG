@@ -62,9 +62,18 @@ Failing models (3):
   - mistral-medium-latest: 429
   - mistral-small-2603: 429
 
+## Streamlit app
+
+the app imports retrieval.py and generation.py. It answers in plain text and then shows the 5 sources. I added a display for the pdf opened at the right page.
+
+### show pdf
+
+There is a streamlit component st.pdf() but it's very new and simple, doesn't allow page jumps etc. Old style display is html embedding. Tried a couple of ways and it works OK. For now there is only 1 file so no need to select it but useful for scaling up. 
+
 
 ## low hanging fruits
  - split by sentence DONE
  - latex expressions
  - formatting french text to have accents DONE
  - safeguards and limitations on model calls 
+ - show pdf
