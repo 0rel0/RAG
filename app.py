@@ -6,13 +6,14 @@ import streamlit as st
 from src.retrieval import Retriever
 from src.generation import generate_answer
 from pathlib import Path
-import base64, os
+import os
+# import streamlit.components.v1 as components #deprecated, use st.iframe instead
 
-PDF_DIR = Path("PhDdoc")
+PDF_DIR = Path("static") # so the file can be served by streamlit cloud
 PDF_FILE = PDF_DIR / "VD2_MARSILI_AURELIEN_21112012.pdf"
 # bridge for secrets on streamlit cloud
-if "MISTRAL_API_KEY" in st.secrets:
-    os.environ["MISTRAL_API_KEY"] = st.secrets["MISTRAL_API_KEY"]
+# if "MISTRAL_API_KEY" in st.secrets:
+#     os.environ["MISTRAL_API_KEY"] = st.secrets["MISTRAL_API_KEY"]
 
 
 st.set_page_config(page_title="Talk to My PhD", page_icon="🎓",
@@ -27,10 +28,10 @@ def load_retriever():
     """getting the Retriever instance is expensive, so using the cache_resource trick"""
     return Retriever()
 
-@st.cache_data
-def load_pdf_base64(pdf_path: Path) -> str:
-    with open(pdf_path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
+# @st.cache_data
+# def load_pdf_base64(pdf_path: Path) -> str:
+#     with open(pdf_path, "rb") as f:
+#         return base64.b64encode(f.read()).decode("utf-8")
 
 retriever = load_retriever()
 
@@ -71,13 +72,6 @@ if query:
     if st.session_state.show_pdf:
         st.divider()
         with st.expander(f"📖 PDF — page {st.session_state.selected_page}", expanded=True):
-            base64_pdf = load_pdf_base64(PDF_FILE)
-            pdf_display = f"""
-            <iframe
-                src="data:application/pdf;base64,{base64_pdf}#page={st.session_state.selected_page}"
-                width="100%"
-                height="1100"
-                type="application/pdf">
-            </iframe>
-            """
-            st.markdown(pdf_display, unsafe_allow_html=True)
+            pdf_url = f"app/static/{PDF_FILE.name}#page={st.session_state.selected_page}"
+            st.markdown(f'<iframe src="{pdf_url}" width="100%" height="1100" type="application/pdf"></iframe>', unsafe_allow_html=True)
+

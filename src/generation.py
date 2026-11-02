@@ -2,7 +2,7 @@
 Call Mistral API with retrieved context to generate a grounded answer.
 """
 import os
-# from dotenv import load_dotenv # other option
+from dotenv import load_dotenv # other option
 from pathlib import Path
 from mistralai.client import Mistral
 
@@ -11,15 +11,18 @@ from mistralai.client import Mistral
 MISTRAL_MODEL = "ministral-3b-latest"  # 
 
 
-
-# load_dotenv() # no-op in production if .env doesn't exist; hosting platforms inject env vars directly
+load_dotenv() 
+# no-op in production if .env doesn't exist; 
+# hosting platforms inject env vars directly
+# more robust locally in case the env variables are not set correctly
+# could use streamlit secrets but there is no streamlit here so far..
 def get_api_key() -> str:
     """Gets mistral API key either from environment variable or from a file specified in an environment variable."""
     if key := os.environ.get("MISTRAL_API_KEY"): #if key is directly there (requires different approach for Streamlit secrets, etc.)
         return key
     if key_file := os.environ.get("MISTRAL_API_KEY_FILE"): #locol file 
         return Path(key_file).read_text().strip()
-    raise RuntimeError("No Mistral API key found: set MISTRAL_API_KEY or MISTRAL_API_KEY_FILE")
+    raise RuntimeError("No Mistral API key found: set MISTRAL_API_KEY or MISTRAL_API_KEY_FILE. Locally: export MISTRAL_API_KEY='your_api_key' or export MISTRAL_API_KEY_FILE='/path/to/keyfile'.")
 
 def build_prompt(query: str, context_chunks: list[dict]) -> str:
     """Builds a prompt using the user query and the retrieved context chunks."""
