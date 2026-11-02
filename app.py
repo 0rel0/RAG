@@ -6,10 +6,14 @@ import streamlit as st
 from src.retrieval import Retriever
 from src.generation import generate_answer
 from pathlib import Path
-import base64
+import base64, os
 
 PDF_DIR = Path("PhDdoc")
 PDF_FILE = PDF_DIR / "VD2_MARSILI_AURELIEN_21112012.pdf"
+# bridge for secrets on streamlit cloud
+if "MISTRAL_API_KEY" in st.secrets:
+    os.environ["MISTRAL_API_KEY"] = st.secrets["MISTRAL_API_KEY"]
+
 
 st.set_page_config(page_title="Talk to My PhD", page_icon="🎓",
     # layout="wide",

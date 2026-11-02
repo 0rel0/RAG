@@ -15,7 +15,7 @@ MISTRAL_MODEL = "ministral-3b-latest"  #
 # load_dotenv() # no-op in production if .env doesn't exist; hosting platforms inject env vars directly
 def get_api_key() -> str:
     """Gets mistral API key either from environment variable or from a file specified in an environment variable."""
-    if key := os.environ.get("MISTRAL_API_KEY"): #if key is directly there (Streamlit secrets, etc.)
+    if key := os.environ.get("MISTRAL_API_KEY"): #if key is directly there (requires different approach for Streamlit secrets, etc.)
         return key
     if key_file := os.environ.get("MISTRAL_API_KEY_FILE"): #locol file 
         return Path(key_file).read_text().strip()
