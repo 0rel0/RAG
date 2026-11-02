@@ -8,6 +8,10 @@ comments.txt
 
 # data
 data/*
+!data/processed/
+!data/processed/index.faiss
+!data/processed/chunks.json
+data/processed/chunks_v1.json
 
 # own tests
 pdf_page*
