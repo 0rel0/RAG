@@ -51,11 +51,11 @@ def get_page_count() -> int:
 # retriever = load_retriever()
 
 # # default value for pages. Remove?
-# if "selected_page" not in st.session_state:
-#     st.session_state.selected_page = 1
+if "selected_page" not in st.session_state:
+    st.session_state.selected_page = 1
 # # default value for show_pdf, showing only if the button is clicked
 if "show_pdf" not in st.session_state:
-    st.session_state.show_pdf = False
+    st.session_state.show_pdf = True
 
 # query = st.text_input("Ask a question about my PhD thesis:",
 #                       placeholder="E.g. 'What is the default loss profile?' or 'How many detectors in the BLM system?'")
@@ -84,8 +84,8 @@ if "show_pdf" not in st.session_state:
 #                     st.session_state.selected_page = r.get("page", 1)
 #                     st.session_state.show_pdf = True
 
-selected_page = st.number_input("Page", 1, get_page_count(), st.session_state.selected_page)                
-
+st.session_state.selected_page = st.number_input("Page", 1, get_page_count())                
+st.write("show_pdf:", st.session_state.show_pdf)
 if True:
     if st.session_state.show_pdf:
         st.divider()
