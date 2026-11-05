@@ -87,10 +87,11 @@ if query:
             def go(delta):
                 st.session_state.selected_page = max(1, min(st.session_state.selected_page + delta, n_pages))
 
-            c1, c2, c3 = st.columns([1, 1, 2])
+            c1, c2, c3, c4 = st.columns([1, 0.5, 1.5, 1], vertical_alignment="center")
             c1.button("◀ Previous", on_click=go, args=(-1,), disabled=page <= 1)
-            c2.button("Next ▶", on_click=go, args=(1,), disabled=page >= n_pages)
-            c3.number_input("Page", 1, n_pages, key="selected_page")
+            c2.markdown("**Page**")
+            c3.number_input("Page", 1, n_pages, key="selected_page", label_visibility="collapsed")
+            c4.button("Next ▶", on_click=go, args=(1,), disabled=page >= n_pages)
             st.image(render_pdf_page(st.session_state.selected_page),
                      caption=f"Page {st.session_state.selected_page} / {n_pages}", width="stretch")
             with open(PDF_FILE, "rb") as f:
