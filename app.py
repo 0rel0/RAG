@@ -43,6 +43,19 @@ def render_pdf_page(page_number: int) -> bytes:
     with fitz.open(PDF_FILE) as doc:
         return doc[page_number - 1].get_pixmap(dpi=130).tobytes("png")
 
+PDF_WINDOW = 40  # pages included after the selected one
+
+@st.cache_data
+def pdf_slice(start_page: int) -> bytes:
+    """PDF bytes containing pages start_page..start_page+PDF_WINDOW-1 (1-based)."""
+    with fitz.open(PDF_FILE) as doc:
+        end = min(start_page + PDF_WINDOW - 1, len(doc))
+        out = fitz.open()
+        out.insert_pdf(doc, from_page=start_page - 1, to_page=end - 1)
+        data = out.tobytes(garbage=3, deflate=True)
+        out.close()
+        return data
+
 @st.cache_data
 def get_page_count() -> int:
     with fitz.open(PDF_FILE) as doc:
@@ -95,15 +108,9 @@ if True:
             page = max(1, min(int(st.session_state.selected_page), n_pages))
             st.session_state.selected_page = page
 
-            def go(delta):
-                st.session_state.selected_page = max(1, min(st.session_state.selected_page + delta, n_pages))
-
-            c1, c2, c3 = st.columns([1, 1, 2])
-            c1.button("◀ Previous", on_click=go, args=(-1,), disabled=page <= 1)
-            c2.button("Next ▶", on_click=go, args=(1,), disabled=page >= n_pages)
-            c3.number_input("Page", 1, n_pages, key="selected_page")
-            st.image(render_pdf_page(st.session_state.selected_page),
-                     caption=f"Page {st.session_state.selected_page} / {n_pages}", use_container_width=True)
+            # st.pdf can't open at a given page, so serve a slice starting there
+            st.caption(f"Scrollable viewer starting at page {page} (thesis pages {page}–{min(page + PDF_WINDOW - 1, n_pages)}). Change the page number above to jump elsewhere.")
+            st.pdf(pdf_slice(page), height=900)
             with open(PDF_FILE, "rb") as f:
                 st.download_button("Download full PDF", f, file_name=PDF_FILE.name, mime="application/pdf")
 
